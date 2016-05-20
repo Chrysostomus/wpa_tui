@@ -4,6 +4,8 @@ Name=wl*
 
 [Network]
 DHCP=yes
+RouteMetric=20
+IPv6PrivacyExtensions=true
 ## to use static IP uncomment these instead of DHCP
 #DNS=192.168.1.254
 #Address=192.168.1.87/24
