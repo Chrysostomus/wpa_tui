@@ -4,7 +4,7 @@ Name=en*
 
 [Network]
 DHCP=yes
-RouteMetric=20
+RouteMetric=10
 IPv6PrivacyExtensions=true
 ## to use static IP uncomment these instead of DHCP
 #DNS=192.168.1.254
