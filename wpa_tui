@@ -6,8 +6,8 @@ BLUE='\e[44m'
 ORANGE='\e[46m'
 NC='\e[0m'
 
-
-wpa_config_file=$(echo /etc/wpa_supplicant/wpa_supplicant-$(ip a show | grep -o "wlp.s0" | uniq).conf)
+wireless_interface=$(networkctl | awk '/wlan/ {print $2}')
+wpa_config_file=$(echo /etc/wpa_supplicant/wpa_supplicant-$(networkctl | awk '/wlan/ {print $2}').conf)
 
 add_network()
 {
@@ -26,11 +26,12 @@ wpa_cli scan
     clear
     echo ""
     echo -e "                          ::Init menu:: "
-    echo -e " ┌─────────────────────────────────────────────────────────────┐"
-    echo -e " │    1   Add a network                2   Show status         │"
-    echo -e " │    3   Edit configration            4   List configured     │"
-    echo -e " │    5   List available networks                              │"
-    echo -e " └─────────────────────────────────────────────────────────────┘"
+    echo -e " ┌──────────────────────────────────────────────────────────────┐"
+    echo -e " │    1   Add a network                2   Show status          │"
+    echo -e " │    3   Edit configration            4   List configured      │"
+    echo -e " │    5   List available networks      6   Show interface status│"
+    echo -e " │    7   Auto-setup networkd          8   De-setup networkd    │"
+    echo -e " └──────────────────────────────────────────────────────────────┘"
     echo -e "          Select an item       -       0   Exit "
     echo ""
     read -s -n1 choix
@@ -70,6 +71,46 @@ wpa_cli scan
             echo "Press any key to continue"
             read
             ;;
+
+        6)
+            echo
+            networkctl -a --no-pager
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        7)
+            echo
+            sudo cp /usr/share/wpa_tui/wired.network /etc/systemd/network/wired.network
+            sudo cp /usr/share/wpa_tui/wireless.network /etc/systemd/network/wireless.network            	
+           	sudo mv /etc/resolv.conf /etc/resolv.conf.bak
+			sudo systemctl enable systemd-networkd 
+			sudo systemctl enable wpa_supplicant@$wireless_interface
+			sudo systemctl enable systemd-resolved
+			sudo systemctl start systemd-networkd
+			sudo systemctl start wpa_supplicant@$wireless_interface
+			sudo systemctl start systemd-resolved
+			sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        8)
+            echo
+           	[ -L /etc/resolv.conf ] && rm /etc/resolv.conf && [ -e /etc/resolv.conf.bak ] && mv /etc/resolv.conf.bak /etc/resolv.conf 
+           	sudo rm /etc/systemd/network/wired.network
+            sudo rm /etc/systemd/network/wireless.network
+           	sudo systemctl disable systemd-networkd 
+			sudo systemctl disable wpa_supplicant@$wireless_interface
+			sudo systemctl disable systemd-resolved
+			sudo systemctl stop systemd-networkd
+			sudo systemctl stop wpa_supplicant@$wireless_interface
+			sudo systemctl stop systemd-resolved
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+
         0)
             clear && exit
             read
