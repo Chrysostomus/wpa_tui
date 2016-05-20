@@ -1,0 +1,10 @@
+# /etc/systemd/network/wlp1s0.network
+[Match]
+Name=wl*
+
+[Network]
+DHCP=yes
+## to use static IP uncomment these instead of DHCP
+#DNS=192.168.1.254
+#Address=192.168.1.87/24
+#Gateway=192.168.1.254

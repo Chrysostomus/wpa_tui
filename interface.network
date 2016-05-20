@@ -1,6 +1,0 @@
-# /etc/systemd/network/wlp1s0.network
-[Match]
-Name=wl*
-
-[Network]
-DHCP=yes
