@@ -1,0 +1,89 @@
+#!/bin/bash
+# wpa_tui, script for adding networks when you use systemd-networkd
+
+RED='\e[41m'
+BLUE='\e[44m'
+ORANGE='\e[46m'
+NC='\e[0m'
+
+
+wpa_config_file=$(echo /etc/wpa_supplicant/wpa_supplicant-$(ip a show | grep -o "wlp.s0" | uniq).conf)
+
+add_network()
+{
+chosen_network=$(wpa_cli scan_results | awk '!/^bssid/ {print $5}' | fzf-tmux --reverse --exit-0 --prompt="Select a network >")
+network_password=$(read -s -p "Password for chosen network: " PASS; echo $PASS)
+
+sudo wpa_passphrase $chosen_network $network_password >> /etc/wpa_supplicant/$wpa_config_file
+}
+
+
+
+main()
+{
+wpa_cli scan
+    while true; do
+    clear
+    echo ""
+    echo -e "                          ::Init menu:: "
+    echo -e " ┌─────────────────────────────────────────────────────────────┐"
+    echo -e " │    1   Add a network                2   Show status         │"
+    echo -e " │    3   Edit configration            4   List configured     │"
+    echo -e " │    5   List available networks                              │"
+    echo -e " └─────────────────────────────────────────────────────────────┘"
+    echo -e "          Select an item       -       0   Exit "
+    echo ""
+    read -s -n1 choix
+    case $choix in
+        1)
+            echo
+            add_network
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        2)
+            echo
+            wpa_cli status
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        3)
+            echo
+            $EDITOR $wpa_config_file
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        4)
+            echo
+            wpa_cli list_networks
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        5)
+            echo
+            wpa_cli scan_results
+            echo ""
+            echo "Press any key to continue"
+            read
+            ;;
+        0)
+            clear && exit
+            read
+            ;;
+        *)
+            echo -e "$RED Wrong option $NC"
+            echo "Wait and try again later..."
+            echo ""
+            sleep 3
+            clear
+            ;;
+    esac
+    done
+
+}
+
+main
