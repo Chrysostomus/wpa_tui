@@ -67,7 +67,7 @@ wpa_cli scan
     while true; do
     clear
     echo ""
-    echo -e "                          ::Init menu:: "
+    echo -e "                          ::wpa_tui:: "
     echo -e " ┌──────────────────────────────────────────────────────────────┐"
     echo -e " │    1   Add a network                2   Show status          │"
     echo -e " │    3   Edit configration            4   List configured      │"
