@@ -82,7 +82,8 @@ wpa_cli scan
         7)
             echo
             sudo cp /usr/share/wpa_tui/wired.network /etc/systemd/network/wired.network
-            sudo cp /usr/share/wpa_tui/wireless.network /etc/systemd/network/wireless.network            	
+            sudo cp /usr/share/wpa_tui/wireless.network /etc/systemd/network/wireless.network
+            sudo mv /etc/wpa_supplicant/wpa_supplicant-interface.conf /etc/wpa_supplicant/wpa_supplicant-$wireless_interface.conf
            	sudo mv /etc/resolv.conf /etc/resolv.conf.bak
 			sudo systemctl enable systemd-networkd 
 			sudo systemctl enable wpa_supplicant@$wireless_interface
