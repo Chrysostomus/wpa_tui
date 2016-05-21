@@ -9,6 +9,48 @@ NC='\e[0m'
 wireless_interface=$(networkctl | awk '/wlan/ {print $2}')
 wpa_config_file=$(echo /etc/wpa_supplicant/wpa_supplicant-$(networkctl | awk '/wlan/ {print $2}').conf)
 
+confirm () {
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure you want this? [y/N]} " response
+    case $response in
+        [yY][eE][sS]|[yY]) 
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+setup_networkd()
+{
+			sudo cp -i /usr/share/wpa_tui/wired.network /etc/systemd/network/wired.network
+            sudo cp -i /usr/share/wpa_tui/wireless.network /etc/systemd/network/wireless.network
+            sudo mv /etc/wpa_supplicant/wpa_supplicant-interface.conf /etc/wpa_supplicant/wpa_supplicant-$wireless_interface.conf
+           	sudo mv /etc/resolv.conf /etc/resolv.conf.bak
+			sudo systemctl enable systemd-networkd 
+			sudo systemctl enable wpa_supplicant@$wireless_interface
+			sudo systemctl enable systemd-resolved
+			sudo systemctl start systemd-networkd
+			sudo systemctl start wpa_supplicant@$wireless_interface
+			sudo systemctl start systemd-resolved
+			sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+}
+
+undo_networkd_setup()
+{
+			[ -L /etc/resolv.conf ] && sudo rm /etc/resolv.conf 
+			[ -e /etc/resolv.conf.bak ] && sudo mv -i /etc/resolv.conf.bak /etc/resolv.conf 
+           	sudo rm /etc/systemd/network/wired.network
+            sudo rm /etc/systemd/network/wireless.network
+           	sudo systemctl disable systemd-networkd 
+			sudo systemctl disable wpa_supplicant@$wireless_interface
+			sudo systemctl disable systemd-resolved
+			sudo systemctl stop systemd-networkd
+			sudo systemctl stop wpa_supplicant@$wireless_interface
+			sudo systemctl stop systemd-resolved
+}
+
 add_network()
 {
 chosen_network=$(wpa_cli scan_results | awk '!/^bssid/ {print $5}' | fzf-tmux --reverse --exit-0 --prompt="Select a network >")
@@ -30,7 +72,7 @@ wpa_cli scan
     echo -e " │    1   Add a network                2   Show status          │"
     echo -e " │    3   Edit configration            4   List configured      │"
     echo -e " │    5   List available networks      6   Show interface status│"
-    echo -e " │    7   Auto-setup networkd          8   De-setup networkd    │"
+    echo -e " │    7   Auto-setup networkd          8   Don't use networkd   │"
     echo -e " └──────────────────────────────────────────────────────────────┘"
     echo -e "          Select an item       -       0   Exit "
     echo ""
@@ -52,7 +94,7 @@ wpa_cli scan
             ;;
         3)
             echo
-            $EDITOR $wpa_config_file
+            sudo $EDITOR $wpa_config_file
             echo ""
             echo "Press any key to continue"
             read
@@ -81,32 +123,24 @@ wpa_cli scan
             ;;
         7)
             echo
-            sudo cp /usr/share/wpa_tui/wired.network /etc/systemd/network/wired.network
-            sudo cp /usr/share/wpa_tui/wireless.network /etc/systemd/network/wireless.network
-            sudo mv /etc/wpa_supplicant/wpa_supplicant-interface.conf /etc/wpa_supplicant/wpa_supplicant-$wireless_interface.conf
-           	sudo mv /etc/resolv.conf /etc/resolv.conf.bak
-			sudo systemctl enable systemd-networkd 
-			sudo systemctl enable wpa_supplicant@$wireless_interface
-			sudo systemctl enable systemd-resolved
-			sudo systemctl start systemd-networkd
-			sudo systemctl start wpa_supplicant@$wireless_interface
-			sudo systemctl start systemd-resolved
-			sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+            echo "Make sure you don't have any other network services enabled"
+            echo "(Networkmanager, connman, wicd or netctl)."
+            echo "This item replaces your /etc/resov.conf with a symlink to"
+            echo "/run/systemd/resolve/resolv.conf. It also enables systemd-networkd, "
+            echo "systemd-resolvd and wpa_supplicant@$wireless_interface and creates"
+            echo "two .network files in /etc/systemd/network/"            
+            confirm && setup_networkd
             echo ""
             echo "Press any key to continue"
             read
             ;;
         8)
             echo
-           	[ -L /etc/resolv.conf ] && rm /etc/resolv.conf && [ -e /etc/resolv.conf.bak ] && mv /etc/resolv.conf.bak /etc/resolv.conf 
-           	sudo rm /etc/systemd/network/wired.network
-            sudo rm /etc/systemd/network/wireless.network
-           	sudo systemctl disable systemd-networkd 
-			sudo systemctl disable wpa_supplicant@$wireless_interface
-			sudo systemctl disable systemd-resolved
-			sudo systemctl stop systemd-networkd
-			sudo systemctl stop wpa_supplicant@$wireless_interface
-			sudo systemctl stop systemd-resolved
+            echo "This item removes the symlink from /etc/resov.conf and tries to restore"
+            echo "your old resolv.conf from backup. It also disables systemd-networkd, "
+            echo "systemd-resolvd and wpa_supplicant@$wireless_interface and removes"
+            echo "the .network files created by this utility from /etc/systemd/network/."
+            confirm && undo_networkd_setup
             echo ""
             echo "Press any key to continue"
             read
