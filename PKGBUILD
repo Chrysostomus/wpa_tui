@@ -8,7 +8,8 @@ url="https://github.com/Chrysostomus/$pkgname"
 license=("MIT")
 depends=('systemd'
 	'wpa_supplicant'
-	'bash')
+	'bash'
+	'fzf')
 makedepends=('git')
 source=("git://github.com/Chrysostomus/$pkgname")
 md5sums=('SKIP')
