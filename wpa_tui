@@ -55,11 +55,9 @@ add_network()
 {
 chosen_network=$(wpa_cli scan_results | awk '!/^bssid/ {print $5}' | fzf-tmux --reverse --exit-0 --prompt="Select a network >")
 network_password=$(read -s -p "Password for chosen network: " PASS; echo $PASS)
-sudo sh -c "wpa_passphrase $chosen_network $network_password >> $wpa_config_file"
-#nnumber=$(wpa_cli tail -n 1 /tmp/network_number)
-#wpa_cli add_network > /tmp/network_number #-i $wpa_config_file
-#wpa_cli set_network $nnumber ssid $chosen_network #-i $wpa_config_file
-#wpa_cli set_network $nnumber psk $network_password #-i $wpa_config_file
+## Use this if your user does not belong to wheel goup
+#sudo sh -c "wpa_passphrase $chosen_network $network_password >> $wpa_config_file"
+wpa_passphrase $chosen_network $network_password >> $wpa_config_file
 }
 
 
