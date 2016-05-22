@@ -34,6 +34,7 @@ setup_networkd()
 			sudo systemctl start systemd-networkd
 			sudo systemctl start wpa_supplicant@$wireless_interface
 			sudo systemctl start systemd-resolved
+			groups $USER | grep -q wheel || sudo -aG wheel $USER
 			sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
 }
 
@@ -55,9 +56,12 @@ add_network()
 {
 chosen_network=$(wpa_cli scan_results | awk '!/^bssid/ {print $5}' | fzf-tmux --reverse --exit-0 --prompt="Select a network >")
 network_password=$(read -s -p "Password for chosen network: " PASS; echo $PASS)
-## Use this if your user does not belong to wheel goup
-#sudo sh -c "wpa_passphrase $chosen_network $network_password >> $wpa_config_file"
 wpa_passphrase $chosen_network $network_password >> $wpa_config_file
+#sudo sh -c "wpa_passphrase $chosen_network $network_password >> $wpa_config_file"
+#nnumber=$(wpa_cli tail -n 1 /tmp/network_number)
+#wpa_cli add_network > /tmp/network_number #-i $wpa_config_file
+#wpa_cli set_network $nnumber ssid $chosen_network #-i $wpa_config_file
+#wpa_cli set_network $nnumber psk $network_password #-i $wpa_config_file
 }
 
 
@@ -129,7 +133,9 @@ wpa_cli scan
             echo "This item replaces your /etc/resov.conf with a symlink to"
             echo "/run/systemd/resolve/resolv.conf. It also enables systemd-networkd, "
             echo "systemd-resolvd and wpa_supplicant@$wireless_interface and creates"
-            echo "two .network files in /etc/systemd/network/"            
+            echo "two .network files in /etc/systemd/network/. Additionally, it"
+            echo "adds you to wheel group (if necessary) so that you can add networks"
+            echo "withou password"            
             confirm && setup_networkd
             echo ""
             echo "Press any key to continue"
