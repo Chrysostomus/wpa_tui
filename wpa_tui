@@ -72,14 +72,14 @@ wpa_cli scan
     while true; do
     clear
     echo ""
-    echo -e "                          ::wpa_tui:: "
-    echo -e " ┌──────────────────────────────────────────────────────────────┐"
-    echo -e " │    1   Add a network                2   Show status          │"
-    echo -e " │    3   Edit configration            4   List configured      │"
-    echo -e " │    5   List available networks      6   Show interface status│"
-    echo -e " │    7   Auto-setup networkd          8   Don't use networkd   │"
-    echo -e " └──────────────────────────────────────────────────────────────┘"
-    echo -e "          Select an item       -       0   Exit "
+    echo -e "                   ::wpa_tui:: "
+    echo -e "┌──────────────────────────────────────────────────┐"
+    echo -e "│ 1 Add a network           2 Show status          │"
+    echo -e "│ 3 Edit configration       4 List configured      │"
+    echo -e "│ 5 List available networks 6 Show interface status│"
+    echo -e "│ 7 Auto-setup networkd     8 Don't use networkd   │"
+    echo -e "└──────────────────────────────────────────────────┘"
+    echo -e "       Select an item   -   0   Exit "
     echo ""
     read -s -n1 choix
     case $choix in
